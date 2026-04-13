@@ -1,0 +1,320 @@
+:root {
+    /* Color Palette */
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    --panel-bg: rgba(30, 41, 59, 0.7);
+    --panel-border: rgba(255, 255, 255, 0.1);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --accent: #3b82f6;
+    --accent-hover: #60a5fa;
+
+    /* Cube Sticker Colors */
+    --c-U: #ffffff; /* Up - White */
+    --c-D: #ffd500; /* Down - Yellow */
+    --c-F: #009e60; /* Front - Green */
+    --c-B: #0051ba; /* Back - Blue */
+    --c-R: #c41e3a; /* Right - Red */
+    --c-L: #ff5800; /* Left - Orange */
+    --c-inside: #121212; /* Plastic of the cube */
+
+    /* Sizing */
+    --cubie-size: 60px;
+    --cube-gap: 3px;
+    --total-size: calc(var(--cubie-size) * 3 + var(--cube-gap) * 2);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2rem;
+}
+
+.app-container {
+    max-width: 1200px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+header {
+    text-align: center;
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.5px;
+    background: linear-gradient(90deg, #fff, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+main {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 2rem;
+    align-items: start;
+}
+
+/* Glassmorphism Panels */
+.controls-panel, .timeline-container {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+h3 {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    color: #e2e8f0;
+}
+
+/* SCENE & 3D CUBE LOGIC */
+.scene-container {
+    position: relative;
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
+    border-radius: 20px;
+    overflow: hidden;
+    user-select: none;
+}
+
+.orbit-hint {
+    position: absolute;
+    bottom: 20px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    pointer-events: none;
+}
+
+.scene {
+    width: var(--total-size);
+    height: var(--total-size);
+    perspective: 1200px; /* 3D depth */
+    cursor: grab;
+}
+
+.scene:active {
+    cursor: grabbing;
+}
+
+.cube {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    /* initial rotation to see multiple faces */
+    transform: rotateX(-30deg) rotateY(-45deg);
+}
+
+/* The Pivot used to animate slices */
+.pivot {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    transform-style: preserve-3d;
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.cubie {
+    width: var(--cubie-size);
+    height: var(--cubie-size);
+    position: absolute;
+    top: 0; left: 0;
+    transform-style: preserve-3d;
+    /* We inject position via js using translate3d */
+}
+
+.face {
+    position: absolute;
+    width: var(--cubie-size);
+    height: var(--cubie-size);
+    border: 2px solid rgba(0, 0, 0, 0.8);
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Face positions in 3D relative to cubie center */
+.face-U { transform: rotateX(90deg) translateZ(calc(var(--cubie-size) / 2)); }
+.face-D { transform: rotateX(-90deg) translateZ(calc(var(--cubie-size) / 2)); }
+.face-F { transform: rotateY(0deg) translateZ(calc(var(--cubie-size) / 2)); }
+.face-B { transform: rotateY(180deg) translateZ(calc(var(--cubie-size) / 2)); }
+.face-R { transform: rotateY(90deg) translateZ(calc(var(--cubie-size) / 2)); }
+.face-L { transform: rotateY(-90deg) translateZ(calc(var(--cubie-size) / 2)); }
+
+/* Color overrides for actual stickers */
+.face-U.sticker { background: var(--c-U); }
+.face-D.sticker { background: var(--c-D); }
+.face-F.sticker { background: var(--c-F); }
+.face-B.sticker { background: var(--c-B); }
+.face-R.sticker { background: var(--c-R); }
+.face-L.sticker { background: var(--c-L); }
+
+
+
+/* CONTROLS UI */
+.cube-controls {
+    margin-bottom: 2rem;
+}
+
+.move-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+}
+
+.move-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-primary);
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.move-btn:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateY(-1px);
+}
+
+.move-btn:active {
+    transform: translateY(1px);
+}
+
+.action-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: white;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-btn.primary {
+    background: var(--accent);
+}
+
+.action-btn.primary:hover {
+    background: var(--accent-hover);
+}
+
+.action-btn.danger {
+    background: rgba(220, 38, 38, 0.2);
+    color: #fca5a5;
+}
+
+.action-btn.danger:hover {
+    background: rgba(220, 38, 38, 0.4);
+}
+
+.action-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+/* TIMELINE */
+.timeline-container {
+    grid-column: 1 / -1;
+}
+
+.playback-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.playback-controls button {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 1rem;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.playback-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#moveCount {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.timeline {
+    display: flex;
+    overflow-x: auto;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.timeline::-webkit-scrollbar {
+    height: 8px;
+}
+.timeline::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.2);
+    border-radius: 4px;
+}
+.timeline::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+}
+
+.move-card {
+    min-width: 60px;
+    text-align: center;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 0.5rem 0;
+    font-weight: bold;
+    color: #e2e8f0;
+}
+
+.move-card.active {
+    background: var(--accent);
+    border-color: var(--accent-hover);
+}
+
+@media (max-width: 900px) {
+    main {
+        grid-template-columns: 1fr;
+    }
+}
