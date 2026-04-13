@@ -1,6 +1,6 @@
 # Rubik's Cube Visualizer & Solver Walkthrough
 
-##working link 
+#working link 
 https://3d-rubik-s-cube-solver.netlify.app/
 
 ## What Was Built
