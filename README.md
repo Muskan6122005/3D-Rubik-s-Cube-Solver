@@ -1,7 +1,7 @@
 # Rubik's Cube Visualizer & Solver Walkthrough
 
 #working link 
-https://3d-rubik-s-cube-solver.netlify.app/
+https://muskan6122005.github.io/3D-Rubik-s-Cube-Solver/
 
 ## What Was Built
 I have successfully implemented the 3D Rubik's Cube Visualizer and Solver precisely following our Vanilla tech-stack plan:
